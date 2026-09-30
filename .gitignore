@@ -1,0 +1,8 @@
+bin/
+obj/
+checks/bin/
+checks/obj/
+artifacts/
+preview/
+preview-*/
+*.user

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>Dayline</AssemblyName>
+    <Version>0.5.0</Version>
+    <!-- WPF owns startup and DPI awareness; WinForms is used only for the tray. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="checks/**/*.cs" />
+    <EmbeddedResource Include="Assets/Dayline.ico" Condition="Exists('Assets/Dayline.ico')" />
+  </ItemGroup>
+  <PropertyGroup Condition="Exists('Assets/Dayline.ico')">
+    <ApplicationIcon>Assets/Dayline.ico</ApplicationIcon>
+  </PropertyGroup>
+</Project>
