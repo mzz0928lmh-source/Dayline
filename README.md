@@ -15,6 +15,8 @@
 ### 开始使用
 
 从 [GitHub Releases](https://github.com/mzz0928lmh-source/Dayline/releases/latest) 下载 Windows x64 版本。推荐下载安装程序 `Dayline-0.6.1-Setup-x64.exe`，双击后按向导安装；也可以下载 ZIP 压缩包，解压后运行 `Dayline.exe`。两种方式均无需另行安装 .NET。启动后先常驻系统托盘。升级前先在系统托盘退出旧版，已有目标、草稿和外观设置会继续读取。安装版支持开始菜单快捷方式、可选桌面快捷方式和卸载；卸载保留本地记录。
+<img width="500"  alt="image" src="https://github.com/user-attachments/assets/9a5f4fdb-244f-4654-88ef-3a37f15d7cca" /><img width="500" alt="image" src="https://github.com/user-attachments/assets/f853e28e-438a-4f26-8550-e9fe4693fa5a" />
+
 
 - 鼠标停在显示器**顶部中央、面板宽度内**的最上沿 **0.4 秒**，面板快速滑出；顶部两侧不会触发。范围与面板实际宽度一致，支持不同屏幕缩放。等待时间可在设置中调整为 0.2～2 秒。
 - 勾选“失焦时自动收起”时，鼠标移出面板后自动收起，输入会先保存。顶部到面板之间的小间隙可直接移入；右键菜单算作软件区域，离开面板和菜单后一起收起。关闭该开关后，鼠标移出也不会自动收起。正在拖动画线、窗口或滑块时，等松开鼠标再收起。
