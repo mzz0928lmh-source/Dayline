@@ -55,6 +55,12 @@ var sidebar = PanelBounds.Calculate(60, 0, 1860, 1040, 1);
 Check(sidebar.Left == 706 && sidebar.IsTopTrigger(990, 0, 0), "A side taskbar keeps the trigger aligned with the actual window");
 var narrow = PanelBounds.Calculate(0, 0, 500, 700, 1);
 Check(narrow.Width == 476 && narrow.Left == 12, "Small displays use the reduced panel width for the trigger");
+var customSize = PanelBounds.Calculate(0, 0, 1920, 1080, 1.5, 720, 600);
+Check(customSize.Width == 1080 && customSize.Height == 900 && customSize.Left == 420
+    && customSize.IsTopTrigger(430, 1, 0) && !customSize.IsTopTrigger(410, 1, 0),
+    "Custom panel dimensions scale with DPI and control the full top trigger width");
+var oversized = PanelBounds.Calculate(0, 0, 800, 600, 1, 1600, 1400);
+Check(oversized.Width == 776 && oversized.Height == 572, "Configured large sizes fit the monitor's available work area");
 Check(area.Contains(960, 300, 26) && !area.Contains(area.Left, area.Top, 26)
     && !area.Contains(960, area.Bottom, 26), "Panel hit testing includes its body and excludes transparent corners and outside pixels");
 Check(area.IsEntryBridge(960, 6, 0, 26) && !area.IsEntryBridge(area.Left - 1, 6, 0, 26), "The entry bridge covers the gap above the panel, not the whole screen");
@@ -85,7 +91,7 @@ Check(Notebook.NextWeekday(friday) == monday && Notebook.NextWeekday(friday.AddD
     && Notebook.NextWeekday(friday.AddDays(2)) == monday, "Friday, Saturday, and Sunday all roll to Monday");
 Check(Notebook.NextWeekday(monday) == monday.AddDays(1), "A weekday rolls to the next weekday");
 Check(Notebook.NextWeekday(new DateTime(2027, 12, 31)) == new DateTime(2028, 1, 3), "Weekend skipping works across a year boundary");
-var carryBook = new Notebook();
+var carryBook = new Notebook { AutoCarryOver = true };
 var unfinished = new Goal { Text = "继续完成说明书翻译" };
 var completed = new Goal { Text = "已上线的客服", Completed = true };
 carryBook.Get(friday).Goals.AddRange(new[] { unfinished, completed });
@@ -111,17 +117,30 @@ Check(!carryBook.CarryOverUnfinished(monday.AddDays(10)) && carryBook.Find(monda
 latest.Completed = false;
 carryBook.Find(monday.AddDays(2))!.Goals.Remove(latest);
 Check(!carryBook.CarryOverUnfinished(monday.AddDays(10)), "Deleting a carried task does not resurrect it from history");
-var twins = new Notebook();
+var twins = new Notebook { AutoCarryOver = true };
 twins.Get(monday).Goals.AddRange(new[] { new Goal { Text = "跟进项目" }, new Goal { Text = "跟进项目" } });
 twins.CarryOverUnfinished(monday.AddDays(1));
 Check(twins.Find(monday.AddDays(1))!.Goals.Count == 2, "Separate tasks with the same text are not incorrectly merged");
-var weekendTask = new Notebook();
+var weekendTask = new Notebook { AutoCarryOver = true };
 weekendTask.Get(friday.AddDays(1)).Goals.Add(new Goal { Text = "周末手动添加的任务" });
 weekendTask.CarryOverUnfinished(monday);
 Check(weekendTask.Find(monday)?.Goals.Count == 1 && weekendTask.Find(friday.AddDays(2)) == null,
     "Manually added weekend tasks carry to Monday, not Sunday");
 
 var searchBook = new Notebook();
+var backfillBook = new Notebook { AutoCarryOver = true };
+var backfill = new Goal { Text = "补录上周的任务", Backfilled = true };
+backfillBook.Get(friday).Goals.Add(backfill);
+Check(!backfillBook.CarryOverUnfinished(monday.AddDays(10)) && backfillBook.Days.Count == 1 && backfill.CarriedTo == null,
+    "Backfilled unfinished goals stay on their original date even after many offline days");
+var disabledBook = new Notebook();
+Check(!disabledBook.AutoCarryOver, "Automatic carryover is disabled until explicitly selected");
+disabledBook.Get(friday).Goals.Add(new Goal { Text = "关闭顺延后的任务" });
+Check(!disabledBook.CarryOverUnfinished(monday.AddDays(10)) && disabledBook.Days.Count == 1,
+    "Disabling automatic carryover prevents all catch-up and future daily copies");
+disabledBook.AutoCarryOver = true;
+Check(disabledBook.CarryOverUnfinished(monday) && disabledBook.Find(monday)?.Goals.Count == 1,
+    "Re-enabling carryover resumes normal scheduling");
 var olderSearchDay = new DateTime(2025, 12, 31);
 var newerSearchDay = new DateTime(2026, 10, 2);
 var searchGoal = new Goal { Text = "完成 Dayline 日历搜索设计", Completed = true };
@@ -149,10 +168,11 @@ try
 {
     var store = new NotebookStore(directory);
     var book = store.Load();
-    Check(book.Days.Count == 0, "First launch has no demo records");
+    Check(book.Days.Count == 0 && !book.AutoCarryOver, "First launch has no demo records and carryover is disabled");
+    Check(!book.Appearance.HideOnBlur, "Focus-loss auto-hide is disabled until explicitly selected");
     book.Get(time).Goals.Add(new Goal { Text = "完成今天的设计", Completed = true, Strokes = new() { new() { new(0, .5), new(.8, .55) } } });
     book.Drafts[Notebook.Key(time)] = "还没按回车的草稿";
-    book.Appearance = new AppearanceSettings { Transparency = .8, CornerRadius = 32, HoverSeconds = .3, Tint = "sand", FontSize = 18, Blur = false, HideOnBlur = false };
+    book.Appearance = new AppearanceSettings { Transparency = .8, CornerRadius = 32, HoverSeconds = .3, Tint = "sand", FontSize = 18, Blur = false, HideOnBlur = false, PanelWidth = 760, PanelHeight = 840 };
     store.Save(book);
     var reloaded = store.Load();
     Check(reloaded.Find(time)!.Goals[0].Text == "完成今天的设计" && reloaded.Find(time)!.Goals[0].Completed, "Chinese goals and completion survive restart");
@@ -161,6 +181,17 @@ try
     Check(reloaded.Appearance.Transparency == .8 && reloaded.Appearance.CornerRadius == 32 && reloaded.Appearance.Tint == "sand"
         && reloaded.Appearance.FontSize == 18 && !reloaded.Appearance.Blur && !reloaded.Appearance.HideOnBlur && reloaded.Appearance.HoverSeconds == .3,
         "Appearance and interaction choices survive restart");
+    Check(reloaded.Appearance.PanelWidth == 760 && reloaded.Appearance.PanelHeight == 840,
+        "User-controlled width and height survive restart");
+    reloaded.Appearance.HideOnBlur = true;
+    store.Save(reloaded);
+    Check(store.Load().Appearance.HideOnBlur, "Selecting focus-loss auto-hide survives restart");
+    reloaded.Appearance.HideOnBlur = false;
+    store.Save(reloaded);
+    Check(!store.Load().Appearance.HideOnBlur, "Clearing focus-loss auto-hide survives restart");
+    reloaded.Appearance.Tint = "charcoal";
+    store.Save(reloaded);
+    Check(store.Load().Appearance.Tint == "charcoal", "The charcoal dark background survives normalization and restart");
     book.Get(time.AddDays(1)).Goals.Add(new Goal { Text = "明天的事" });
     store.Save(book);
     Check(store.Load().Days.Count == 2, "Different dates keep independent records");
@@ -174,10 +205,18 @@ try
     try { store.Load(); } catch (IOException) { refused = true; }
     Check(refused, "Unrecoverable corruption is never silently overwritten");
     File.WriteAllText(store.FilePath, "{\"Days\":{},\"Drafts\":{}}");
-    Check(store.Load().Appearance.Transparency == .65 && store.Load().Appearance.HideOnBlur, "Old journals receive new appearance defaults without migration");
+    Check(store.Load().Appearance.Transparency == .65 && !store.Load().Appearance.HideOnBlur && !store.Load().AutoCarryOver
+        && store.Load().Appearance.PanelWidth == 568 && store.Load().Appearance.PanelHeight == 660,
+        "Old journals without auto-hide or carryover settings receive disabled defaults without migration");
+    var legacyBook = store.Load();
+    legacyBook.Get(friday).Goals.Add(new Goal { Text = "旧记录中的未完成任务" });
+    Check(!legacyBook.CarryOverUnfinished(monday.AddDays(20)) && legacyBook.Days.Count == 1,
+        "An old journal without an explicit selection does not generate carried goals");
     var invalid = new AppearanceSettings { Transparency = 99, CornerRadius = -5, FontSize = double.NaN, HoverSeconds = double.PositiveInfinity, Tint = "unknown" };
     invalid.Normalize();
     Check(invalid.Transparency == .85 && invalid.CornerRadius == 12 && invalid.FontSize == 15 && invalid.HoverSeconds == .4 && invalid.Tint == "sage", "Invalid settings are constrained to usable values");
+    invalid.PanelWidth = double.PositiveInfinity; invalid.PanelHeight = -1; invalid.Normalize();
+    Check(invalid.PanelWidth == 568 && invalid.PanelHeight == 570, "Invalid dimensions fall back or clamp to usable values");
     store.Save(twins);
     var afterRestart = store.Load();
     Check(!afterRestart.CarryOverUnfinished(monday.AddDays(1)) && afterRestart.Find(monday.AddDays(1))!.Goals.Count == 2,
@@ -186,6 +225,20 @@ try
     Check(afterRestart.Find(monday.AddDays(2))!.Goals.Count == 2, "A restarted task continues rolling on the next weekday");
     store.Save(carryBook);
     Check(!store.Load().CarryOverUnfinished(monday.AddDays(20)), "Deletion remains respected after restart");
+    backfillBook.Appearance.Tint = "night";
+    store.Save(backfillBook);
+    var reloadedBackfill = store.Load();
+    Check(reloadedBackfill.Appearance.Tint == "night" && reloadedBackfill.Find(friday)!.Goals[0].Backfilled
+        && !reloadedBackfill.CarryOverUnfinished(monday.AddDays(20)) && reloadedBackfill.Days.Count == 1,
+        "The dark theme and backfill protection survive restart");
+    store.Save(disabledBook);
+    var enabledAfterRestart = store.Load();
+    Check(enabledAfterRestart.AutoCarryOver && enabledAfterRestart.CarryOverUnfinished(monday.AddDays(1)),
+        "Selecting carryover survives restart and continues scheduling unfinished tasks");
+    disabledBook.AutoCarryOver = false;
+    store.Save(disabledBook);
+    Check(!store.Load().AutoCarryOver && !store.Load().CarryOverUnfinished(monday.AddDays(20)),
+        "A disabled carryover setting survives restart without generating more tasks");
 }
 finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
 Console.WriteLine($"\n{checks} checks passed.");

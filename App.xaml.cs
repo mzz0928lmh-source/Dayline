@@ -32,7 +32,7 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
         if (e.Args.Length > 0 && e.Args[0] == "--native-check")
         {
-            SelfChecks.RunNative(this, e.Args.Length > 1 ? e.Args[1] : Path.Combine(AppContext.BaseDirectory, "preview"));
+            SelfChecks.RunNative(this, e.Args.Length > 1 ? e.Args[1] : Path.Combine(AppContext.BaseDirectory, "preview"), !e.Args.Contains("--interaction-only"));
             return;
         }
         if (e.Args.Length > 0 && e.Args[0] == "--self-test")
@@ -56,6 +56,7 @@ public partial class App : System.Windows.Application
         MainWindow = panel;
         panel.HideRequested += HidePanel;
         panel.Interaction += () => timing.TouchReminder(DateTime.Now);
+        panel.Detached += () => { timing.CancelReminder(); timing.BeginPointerWatch(false); };
         panel.Closing += (_, args) => { if (!exiting) { args.Cancel = true; HidePanel(); } };
         hwnd = new WindowInteropHelper(panel).EnsureHandle();
         HwndSource.FromHwnd(hwnd)?.AddHook(WindowMessage);
@@ -118,10 +119,10 @@ public partial class App : System.Windows.Application
             panel.FlushPendingChanges();
             panel.RefreshForNewDay();
         }
-        if (timing.AtEdge(now, Native.IsAtTop(), panel.Appearance.HoverSeconds) && !panel.IsVisible) Reveal(false, true, fromTop: true);
+        if (timing.AtEdge(now, Native.IsAtTop(panel.Appearance), panel.Appearance.HoverSeconds) && !panel.IsVisible) Reveal(false, true, fromTop: true);
         if (timing.HourDue(now) && !panel.IsVisible) Reveal(true, true);
         if (panel.IsVisible && Native.GetCursorPos(out var pointer) && panel.ShouldHideForPointer(timing, now, pointer.X, pointer.Y)) HidePanel();
-        if (timing.ReminderDeadline.HasValue && panel.IsVisible)
+        if (timing.ReminderDeadline.HasValue && panel.IsVisible && !panel.IsDetached)
         {
             bool expired = timing.ReminderExpired(now, panel.IsInteracting);
             if (expired) HidePanel();
@@ -131,7 +132,7 @@ public partial class App : System.Windows.Application
     private void Reveal(bool automatic, bool today, bool fromTop = false)
     {
         if (panel == null) return;
-        if (today && !panel.IsBusy) panel.ShowDay(DateTime.Today);
+        if (today && !panel.IsBusy && !panel.IsDetached) panel.ShowDay(DateTime.Today);
         if (automatic) timing.BeginReminder(DateTime.Now); else timing.CancelReminder();
         timing.BeginPointerWatch(fromTop);
         panel.Reveal(automatic);
@@ -149,7 +150,7 @@ public partial class App : System.Windows.Application
     {
         if (message == 0x0312 && wParam.ToInt32() == 1)
         {
-            if (panel?.IsVisible == true) HidePanel(); else Reveal(false, true);
+            if (panel?.IsVisible == true && !panel.IsDetached) HidePanel(); else Reveal(false, true);
             handled = true;
         }
         return IntPtr.Zero;

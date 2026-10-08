@@ -33,9 +33,9 @@ internal static class Native
     {
         var hwnd = new WindowInteropHelper(window).Handle;
         if (HwndSource.FromHwnd(hwnd)?.CompositionTarget is { } target) target.BackgroundColor = Colors.Transparent;
-        int rounded = 2, light = 0, border = unchecked((int)0xFFFFFFFE);
+        int rounded = 2, dark = settings.Tint == "night" ? 1 : 0, border = unchecked((int)0xFFFFFFFE);
         DwmSetWindowAttribute(hwnd, 33, ref rounded, 4);
-        DwmSetWindowAttribute(hwnd, 20, ref light, 4);
+        DwmSetWindowAttribute(hwnd, 20, ref dark, 4);
         DwmSetWindowAttribute(hwnd, 34, ref border, 4);
         // Use untinted live blur, then tint once in WPF. Acrylic's own opaque tint
         // plus the WPF surface previously made the panel nearly solid white.
@@ -59,26 +59,26 @@ internal static class Native
         return Forms.Screen.FromPoint(new System.Drawing.Point(cursor.X, cursor.Y));
     }
 
-    internal static bool IsAtTop()
+    internal static bool IsAtTop(AppearanceSettings? settings = null)
     {
         GetCursorPos(out var cursor);
         var screen = Forms.Screen.FromPoint(new System.Drawing.Point(cursor.X, cursor.Y));
         if (cursor.Y < screen.Bounds.Top || cursor.Y > screen.Bounds.Top + 2) return false;
-        return Placement(screen).bounds.IsTopTrigger(cursor.X, cursor.Y, screen.Bounds.Top);
+        return Placement(screen, settings).bounds.IsTopTrigger(cursor.X, cursor.Y, screen.Bounds.Top);
     }
 
-    internal static (PanelBounds bounds, double scale) Placement(Forms.Screen screen)
+    internal static (PanelBounds bounds, double scale) Placement(Forms.Screen screen, AppearanceSettings? settings = null)
     {
         var center = new Point { X = screen.Bounds.Left + screen.Bounds.Width / 2, Y = screen.Bounds.Top + 10 };
         GetDpiForMonitor(MonitorFromPoint(center, 2), 0, out uint dpi, out _);
         double scale = (dpi == 0 ? 96 : dpi) / 96.0;
         return (PanelBounds.Calculate(screen.WorkingArea.Left, screen.WorkingArea.Top,
-            screen.WorkingArea.Width, screen.WorkingArea.Height, scale), scale);
+            screen.WorkingArea.Width, screen.WorkingArea.Height, scale, settings?.PanelWidth ?? 568, settings?.PanelHeight ?? 660), scale);
     }
 
     internal static void Place(Window window, Forms.Screen screen, AppearanceSettings settings)
     {
-        var (bounds, scale) = Placement(screen);
+        var (bounds, scale) = Placement(screen, settings);
         window.Width = bounds.Width / scale;
         window.Height = bounds.Height / scale;
         SetWindowPos(new WindowInteropHelper(window).Handle, new IntPtr(-1), bounds.Left, bounds.Top, bounds.Width, bounds.Height, 0x0010);
@@ -96,7 +96,7 @@ internal static class Native
 
     internal static int ScreenTop(Window window) => Forms.Screen.FromHandle(new WindowInteropHelper(window).Handle).Bounds.Top;
 
-    private static void UpdateCorners(Window window, AppearanceSettings settings)
+    internal static void UpdateCorners(Window window, AppearanceSettings settings)
     {
         var hwnd = new WindowInteropHelper(window).Handle;
         if (settings.Blur && GetWindowRect(hwnd, out var bounds))

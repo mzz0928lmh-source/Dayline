@@ -3,13 +3,28 @@
     <SolidColorBrush x:Key="Ink" Color="#283C38" />
     <SolidColorBrush x:Key="Muted" Color="#788580" />
     <SolidColorBrush x:Key="Accent" Color="#557C68" />
+    <SolidColorBrush x:Key="InputSurface" Color="#65FFFFFF" />
+    <SolidColorBrush x:Key="Outline" Color="#28768A78" />
+    <SolidColorBrush x:Key="Card" Color="#44FFFFFF" />
+    <SolidColorBrush x:Key="CompletedCard" Color="#347E967E" />
+    <SolidColorBrush x:Key="PopupSurface" Color="#FFF0F4ED" />
+    <SolidColorBrush x:Key="Selection" Color="#909FC9A0" />
+    <SolidColorBrush x:Key="SelectionOutline" Color="#426C50" />
+    <SolidColorBrush x:Key="SubtleSurface" Color="#2077917E" />
+    <SolidColorBrush x:Key="HoverSurface" Color="#1877917E" />
+    <SolidColorBrush x:Key="PressedSurface" Color="#3077917E" />
+    <SolidColorBrush x:Key="CompletedInk" Color="#7A8C7D" />
+    <SolidColorBrush x:Key="Note" Color="#8E9B92" />
+    <SolidColorBrush x:Key="Progress" Color="#8BA691" />
+    <SolidColorBrush x:Key="Stroke" Color="#9B58735E" />
+    <SolidColorBrush x:Key="Track" Color="#12738A78" />
     <Style TargetType="TextBlock">
-      <Setter Property="Foreground" Value="{StaticResource Ink}" />
+      <Setter Property="Foreground" Value="{DynamicResource Ink}" />
       <Setter Property="FontFamily" Value="Segoe UI, Microsoft YaHei UI" />
     </Style>
     <Style TargetType="Button">
       <Setter Property="FontFamily" Value="Segoe UI, Microsoft YaHei UI" />
-      <Setter Property="Foreground" Value="{StaticResource Ink}" />
+      <Setter Property="Foreground" Value="{DynamicResource Ink}" />
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="Padding" Value="12,8" />
@@ -20,25 +35,39 @@
             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
           </Border>
           <ControlTemplate.Triggers>
-            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="#1877917E" /></Trigger>
-            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Surface" Property="Background" Value="#3077917E" /></Trigger>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource HoverSurface}" /></Trigger>
+            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource PressedSurface}" /></Trigger>
             <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.35" /></Trigger>
-            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="Background" Value="#2877917E" /></Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource HoverSurface}" /></Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value></Setter>
     </Style>
     <Style TargetType="TextBox">
       <Setter Property="FontFamily" Value="Segoe UI, Microsoft YaHei UI" />
-      <Setter Property="Foreground" Value="{StaticResource Ink}" />
-      <Setter Property="CaretBrush" Value="{StaticResource Accent}" />
+      <Setter Property="Foreground" Value="{DynamicResource Ink}" />
+      <Setter Property="CaretBrush" Value="{DynamicResource Accent}" />
       <Setter Property="SelectionBrush" Value="#507D9D87" />
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="Padding" Value="0,6" />
       <Setter Property="FontSize" Value="15" />
     </Style>
-    <Style TargetType="ToolTip"><Setter Property="FontFamily" Value="Microsoft YaHei UI" /></Style>
+    <Style TargetType="ToolTip"><Setter Property="FontFamily" Value="Microsoft YaHei UI" /><Setter Property="Background" Value="{DynamicResource PopupSurface}"/><Setter Property="Foreground" Value="{DynamicResource Ink}"/></Style>
+    <Style TargetType="MenuItem">
+      <Setter Property="Foreground" Value="{DynamicResource Ink}"/>
+      <Setter Property="Template"><Setter.Value>
+        <ControlTemplate TargetType="MenuItem">
+          <Border x:Name="MenuSurface" Background="Transparent" Padding="14,8" CornerRadius="6">
+            <ContentPresenter ContentSource="Header" RecognizesAccessKey="True"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="MenuSurface" Property="Background" Value="{DynamicResource HoverSurface}"/></Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value=".4"/></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value></Setter>
+    </Style>
     <Style TargetType="ScrollBar">
       <Setter Property="Width" Value="7"/>
       <Setter Property="Background" Value="Transparent"/>
@@ -58,7 +87,7 @@
     </Style>
     <Style TargetType="Slider">
       <Setter Property="Height" Value="22"/>
-      <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+      <Setter Property="Foreground" Value="{DynamicResource Accent}"/>
       <Setter Property="Template"><Setter.Value>
         <ControlTemplate TargetType="Slider">
           <Grid Background="Transparent" Margin="1,0">

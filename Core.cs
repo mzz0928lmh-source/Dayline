@@ -12,6 +12,7 @@ public sealed class Goal
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Text { get; set; } = "";
     public bool Completed { get; set; }
+    public bool Backfilled { get; set; }
     public List<List<InkPoint>> Strokes { get; set; } = new();
     public string? CarriedFrom { get; set; }
     public string? CarriedTo { get; set; }
@@ -29,6 +30,7 @@ public sealed class Notebook
     public Dictionary<string, DayRecord> Days { get; set; } = new();
     public Dictionary<string, string> Drafts { get; set; } = new();
     public AppearanceSettings Appearance { get; set; } = new();
+    public bool AutoCarryOver { get; set; }
     public static string Key(DateTime day) => day.ToString("yyyy-MM-dd");
     public DayRecord? Find(DateTime day) => Days.GetValueOrDefault(Key(day));
     public DayRecord Get(DateTime day)
@@ -59,6 +61,7 @@ public sealed class Notebook
 
     public bool CarryOverUnfinished(DateTime today)
     {
+        if (!AutoCarryOver) return false;
         today = today.Date;
         bool changed = false;
         foreach (var entry in Days.OrderBy(d => d.Key, StringComparer.Ordinal).ToArray())
@@ -69,7 +72,7 @@ public sealed class Notebook
             {
                 var goal = original;
                 var day = sourceDay;
-                while (day < today && !goal.Completed && goal.CarriedTo == null)
+                while (day < today && !goal.Completed && !goal.Backfilled && goal.CarriedTo == null)
                 {
                     var next = NextWeekday(day);
                     var destination = Get(next);
@@ -155,7 +158,9 @@ public sealed class AppearanceSettings
     public double CornerRadius { get; set; } = 26;
     public double FontSize { get; set; } = 15;
     public double HoverSeconds { get; set; } = 0.4;
-    public bool HideOnBlur { get; set; } = true;
+    public bool HideOnBlur { get; set; }
+    public double PanelWidth { get; set; } = 568;
+    public double PanelHeight { get; set; } = 660;
     public string Tint { get; set; } = "sage";
     public void Normalize()
     {
@@ -163,7 +168,9 @@ public sealed class AppearanceSettings
         CornerRadius = Clamp(CornerRadius, 12, 36, 26);
         FontSize = Clamp(FontSize, 13, 20, 15);
         HoverSeconds = Clamp(HoverSeconds, 0.2, 2, 0.4);
-        if (Tint is not ("sage" or "white" or "sand")) Tint = "sage";
+        PanelWidth = Clamp(PanelWidth, 500, 1600, 568);
+        PanelHeight = Clamp(PanelHeight, 570, 1400, 660);
+        if (Tint is not ("sage" or "white" or "sand" or "night" or "charcoal")) Tint = "sage";
     }
     private static double Clamp(double value, double min, double max, double fallback) => double.IsFinite(value) ? Math.Clamp(value, min, max) : fallback;
 }
@@ -206,10 +213,10 @@ public readonly record struct PanelBounds(int Left, int Top, int Width, int Heig
 {
     public int Right => Left + Width;
     public int Bottom => Top + Height;
-    public static PanelBounds Calculate(int workLeft, int workTop, int workWidth, int workHeight, double scale)
+    public static PanelBounds Calculate(int workLeft, int workTop, int workWidth, int workHeight, double scale, double panelWidth = 568, double panelHeight = 660)
     {
-        int width = (int)Math.Round(Math.Min(568, workWidth / scale - 24) * scale);
-        int height = (int)Math.Round(Math.Min(660, workHeight / scale - 28) * scale);
+        int width = (int)Math.Round(Math.Min(panelWidth, workWidth / scale - 24) * scale);
+        int height = (int)Math.Round(Math.Min(panelHeight, workHeight / scale - 28) * scale);
         return new(workLeft + (workWidth - width) / 2, workTop + (int)(12 * scale), width, height);
     }
     public bool IsTopTrigger(int x, int y, int screenTop) => x >= Left && x < Right && y >= screenTop && y <= screenTop + 2;

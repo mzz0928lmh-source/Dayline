@@ -8,7 +8,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>Dayline</AssemblyName>
-    <Version>0.5.0</Version>
+    <Version>0.6.1</Version>
     <!-- WPF owns startup and DPI awareness; WinForms is used only for the tray. -->
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
   </PropertyGroup>
