@@ -1,12 +1,16 @@
 # 日迹 · Dayline
 
-一个安静的 Windows 工作记录面板。写下今天的目标，完成后用鼠标轻轻划掉。
+日迹是一款 Windows 本地目标记录与提醒工具。写下每天的目标，用鼠标划线标记完成，按日期查看或搜索历史记录。支持整点提醒、可选任务顺延、深色背景，以及可拖动、调整大小的面板。记录与设置保存在本机，无需账号或联网。
 
-版本更新记录：[CHANGELOG.md](CHANGELOG.md)。
+Dayline is a local Windows app for daily goals and reminders. Write down your goals, cross them out with mouse strokes, and browse or search past records by date. It includes hourly reminders, optional task carryover, dark themes, and a movable, resizable panel. Your records and settings stay on your computer; no account or internet connection is required.
+
+版本更新记录 / Changelog：[CHANGELOG.md](CHANGELOG.md)。
 
 ## 开始使用
 
-从 [GitHub Releases](https://github.com/mzz0928lmh-source/Dayline/releases/latest) 下载 Windows x64 发行压缩包，解压后双击其中的 `Dayline.exe` 即可，无需另外安装 .NET。启动后先常驻系统托盘。升级时，先在系统托盘退出旧版，再启动新版；已有目标、草稿和外观设置会自动读取。
+从 [GitHub Releases](https://github.com/mzz0928lmh-source/Dayline/releases/latest) 下载 Windows x64 版本。推荐下载安装程序 `Dayline-0.6.1-Setup-x64.exe`，双击后按向导安装；也可以下载 ZIP 压缩包，解压后运行 `Dayline.exe`。两种方式均无需另行安装 .NET。启动后先常驻系统托盘。升级前先在系统托盘退出旧版，已有目标、草稿和外观设置会继续读取。安装版支持开始菜单快捷方式、可选桌面快捷方式和卸载；卸载保留本地记录。
+
+Download the Windows x64 build from [GitHub Releases](https://github.com/mzz0928lmh-source/Dayline/releases/latest). Run `Dayline-0.6.1-Setup-x64.exe` to install, or extract the ZIP and run `Dayline.exe`. No separate .NET installation is needed. The app starts in the system tray. Exit the previous version before upgrading; your records and settings are preserved. The installer adds a Start menu shortcut, offers an optional desktop shortcut, and supports uninstalling while keeping your records.
 
 - 鼠标停在显示器**顶部中央、面板宽度内**的最上沿 **0.4 秒**，面板快速滑出；顶部两侧不会触发。范围与面板实际宽度一致，支持不同屏幕缩放。等待时间可在设置中调整为 0.2～2 秒。
 - 勾选“失焦时自动收起”时，鼠标移出面板后自动收起，输入会先保存。顶部到面板之间的小间隙可直接移入；右键菜单算作软件区域，离开面板和菜单后一起收起。关闭该开关后，鼠标移出也不会自动收起。正在拖动画线、窗口或滑块时，等松开鼠标再收起。
@@ -47,6 +51,16 @@
 ## 开发与验证
 
 使用 .NET 10 SDK。WPF 负责界面，Win32 / DWM 负责顶部检测、窗口定位与背景模糊；WinForms 仅用于系统托盘。没有第三方 NuGet 依赖。
+
+生成安装版 EXE：先安装 [Inno Setup 6 或 7](https://jrsoftware.org/isdl.php)，然后在项目根目录运行以下命令。脚本先发布包含 .NET 运行时的应用，再编译安装程序；输出位于 `artifacts/installer/`，文件名自动使用项目版本号。
+
+To build the installer EXE, install [Inno Setup 6 or 7](https://jrsoftware.org/isdl.php) and run this command from the project root. The script publishes a self-contained app and builds the installer in `artifacts/installer/`, using the project version in its filename.
+
+```powershell
+.\packaging\Build-Installer.ps1
+# 编译器安装在其他位置时 / For a custom compiler location:
+.\packaging\Build-Installer.ps1 -CompilerPath 'C:\Tools\Inno Setup\ISCC.exe'
+```
 
 ```powershell
 dotnet build Dayline.csproj -c Release
