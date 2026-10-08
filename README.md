@@ -15,6 +15,7 @@
 ### 开始使用
 
 从 [GitHub Releases](https://github.com/mzz0928lmh-source/Dayline/releases/latest) 下载 Windows x64 版本。推荐下载安装程序 `Dayline-0.6.1-Setup-x64.exe`，双击后按向导安装；也可以下载 ZIP 压缩包，解压后运行 `Dayline.exe`。两种方式均无需另行安装 .NET。启动后先常驻系统托盘。升级前先在系统托盘退出旧版，已有目标、草稿和外观设置会继续读取。安装版支持开始菜单快捷方式、可选桌面快捷方式和卸载；卸载保留本地记录。
+
 <img width="500"  alt="image" src="https://github.com/user-attachments/assets/9a5f4fdb-244f-4654-88ef-3a37f15d7cca" /><img width="500" alt="image" src="https://github.com/user-attachments/assets/f853e28e-438a-4f26-8550-e9fe4693fa5a" />
 
 
